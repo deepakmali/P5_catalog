@@ -1,0 +1,21 @@
+{% extends "base_format.html" %}
+{% block content %}
+<div class="row">
+    <div class="col-md-12 text-center">
+        <h3>Create a new Category</h3>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-3"></div>
+    <div class="col-md-6">
+        <form method="POST">
+            <div class="form-group">
+                <label for="add_category">Category Name</label>
+                <input type="text" name="new_category" id="add_category" placeholder="{% if category %} {% else %}Enter the new Category {% endif %}" value="{{ category.name }}">
+            </div>
+            <input type="submit" name="submit" value="{% if category %} Update {% else %}Create {% endif %}">
+        </form>
+    </div>
+    <div class="col-md-3"></div>
+</div>
+{% endblock %}
