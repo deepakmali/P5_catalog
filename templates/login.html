@@ -17,5 +17,42 @@
 		data-approvalprompt="force">
 	</span>
 </div>
+<div id="result_data"></div>
+<script>
+// This will be called once the signin is successful
+function signInCallback(authResult){
+	console.log(authResult['code'])
+	if (authResult['code']) {
+		// To hide the sign in button once the user is logged in
+		$('#signInButton').attr('style', 'display:none');
+		// To send the one time use code to the server,if the server responds
+		// write login successful to this page and redirect to home page.
+		$.ajax({
+			type : 'POST',
+			url : '/gconnect?state={{STATE}}', // this is defined in application.py
+			processData : false, // To tell Jquery to NOT to process data into string
+			contentType : 'application/octet-stream; charset=utf-8', // octet-stream tells we are sending binary data
+			// charset says the encoding method.
+			data : authResult['code'], // Code to send the one time code to server
+			// What to do on success response is below.
+			success : function(result) {
+				console.log(result)
+				if (result) {
+					$('#result_data').html('Login was successful <br> ' + 'Redirecting to the home page....');
+					setTimeout(function(){
+						window.location.href = "/categories" ;
+					}, 4000);
+				}
+				else if (authResult['error']){
+					console.log('There was an error ' + authResult['error']);
+				}
+				else{
+					$('#result_data').html('Failed to make a server-side call. check your config and console')
+				}
+			}
+		});
+	}
+}
+</script>
 </body>
 </html>
