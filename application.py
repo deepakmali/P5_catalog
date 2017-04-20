@@ -111,7 +111,7 @@ def gdisconnect():
     access_token = credentials.access_token
     url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' % access_token
     h = httplib2.Http()
-    result = h.request.get(url, 'GET')[0]
+    result = h.request(url, 'GET')[0]
     if result['status'] == '200':
         # Reset the user's session
         del login_session['credentials']
