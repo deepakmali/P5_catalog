@@ -262,7 +262,7 @@ def create_item(category_name=None):
         all_categories = None
     else:
         category= None
-        all_categories = session.query(Categories).all()
+        all_categories = session.query(Categories).filter_by(created_by=login_session['myapp_userid']).all()
     if request.method == 'GET':
         return render_template('new_item.html',
                                category=category,
