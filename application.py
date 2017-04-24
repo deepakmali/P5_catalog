@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, flash
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from database_setup import Base, Categories, Items, Users
@@ -238,6 +238,7 @@ def home():
 @app.route('/categories/new', methods=['GET', 'POST'])
 def create_category():
     if not isUserLoggedIn():
+        flash('Please login to continue....')
         return redirect(url_for('showLogin'))
     if request.method == 'GET':
         return render_template("new_category.html", category=None)
@@ -253,6 +254,7 @@ def create_category():
 @app.route('/categories/<string:category_name>/edit', methods=['GET', 'POST'])
 def edit_category(category_name):
     if not isUserLoggedIn():
+        flash('Please login to continue....')
         return redirect(url_for('showLogin'))
     category = session.query(Categories).filter_by(name=category_name).one()
     if request.method == 'GET':
@@ -268,6 +270,7 @@ def edit_category(category_name):
 @app.route('/categories/<string:category_name>/items')
 def category_items(category_name):
     if not isUserLoggedIn():
+        flash('Please login to continue....')
         return redirect(url_for('showLogin'))
     category = session.query(Categories).filter_by(name=category_name).one()
     items = session.query(Items).filter_by(category_id=category.id).all()
@@ -281,6 +284,7 @@ def category_items(category_name):
 @app.route('/categories/<string:category_name>/items/new', methods=['GET', 'POST'])
 def create_item(category_name=None):
     if not isUserLoggedIn():
+        flash('Please login to continue....')
         return redirect(url_for('showLogin'))
     # print category_name
     if category_name:
@@ -317,6 +321,7 @@ def create_item(category_name=None):
 @app.route('/categories/<string:category_name>/items/<string:item_name>/edit', methods=['GET', 'POST'])
 def edit_item(category_name, item_name):
     if not isUserLoggedIn():
+        flash('Please login to continue....')
         return redirect(url_for('showLogin'))
     category = session.query(Categories).filter_by(name=category_name).one()
     item = session.query(Items).filter_by(name=item_name).one()

@@ -6,6 +6,17 @@
 	<script src="//apis.google.com/js/platform.js?onload=start"></script>
 </head>
 <body>
+{% with messages = get_flashed_messages() %}
+{% if messages %}
+<ul>
+  {% for message in messages %}
+  <li>{{ message }}</li>
+  {% endfor %}
+</ul>
+{% endif %}
+{% endwith %}
+
+
 <div id="signInButton">
 	<span class="g-signin"
 		data-scope="openid email"
