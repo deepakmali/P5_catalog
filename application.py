@@ -17,6 +17,7 @@ import requests
 
 # Getting details from google client_secrets.json file
 CLIENT_ID = json.loads(open('client_secrets.json', 'r').read())['web']['client_id']
+APPUSER_ID = None
 
 # Database connection and session creation goes here
 engine = create_engine('postgresql://appsys:appsys@localhost:5432/catalog')
@@ -44,6 +45,17 @@ def get_userid(login_session):
     if not user:
         user = create_user(login_session)
     return user.id
+
+
+# check if user is logged in and route to login page if not logged in 
+def isUserLoggedIn():
+    print APPUSER_ID
+    if APPUSER_ID:
+        user = session.query(Users).filter_by(id=APPUSER_ID).first()
+        if user:
+            return True
+    return False
+
 
 
 # Sign in functions start here
@@ -117,7 +129,7 @@ def gconnect():
     login_session['picture'] = data["picture"]
     login_session['email'] = data["email"]
     # print login_session['name']
-    login_session['myapp_userid'] = get_userid(login_session)
+    APPUSER_ID = get_userid(login_session)
     return login_session['name']
 
 # Logging out users
@@ -140,7 +152,7 @@ def gdisconnect():
         del login_session['email']
         del login_session['picture']
         del login_session['gplus_id']
-        del login_session['myapp_userid']
+        APPUSER_ID = None
 
         response = make_response(json.dumps('Successfully disconnected'), 200)
         response.headers['Content-Type'] = 'application/json'
@@ -195,7 +207,7 @@ def fbconnect():
     data = json.loads(result)
 
     login_session['picture'] = data["data"]["url"]
-    login_session['myapp_userid'] = get_userid(login_session)
+    APPUSER_ID = get_userid(login_session)
     return login_session['username']
 
 
@@ -219,12 +231,14 @@ def home():
 
 @app.route('/categories/new', methods=['GET', 'POST'])
 def create_category():
+    if not isUserLoggedIn():
+        return redirect(url_for('showLogin'))
     if request.method == 'GET':
         return render_template("new_category.html", category=None)
     else:
         category = request.form['new_category']
         new_category = Categories(name=category,
-                                  created_by=login_session['myapp_userid'])
+                                  created_by=APPUSER_ID)
         session.add(new_category)
         session.commit()
         return redirect(url_for('home'))
@@ -232,6 +246,8 @@ def create_category():
 
 @app.route('/categories/<string:category_name>/edit', methods=['GET', 'POST'])
 def edit_category(category_name):
+    if not isUserLoggedIn():
+        return redirect(url_for('showLogin'))
     category = session.query(Categories).filter_by(name=category_name).one()
     if request.method == 'GET':
         return render_template('new_category.html', category=category)
@@ -245,6 +261,8 @@ def edit_category(category_name):
 
 @app.route('/categories/<string:category_name>/items')
 def category_items(category_name):
+    if not isUserLoggedIn():
+        return redirect(url_for('showLogin'))
     category = session.query(Categories).filter_by(name=category_name).one()
     items = session.query(Items).filter_by(category_id=category.id).all()
     return render_template('category_items.html',
@@ -256,13 +274,15 @@ def category_items(category_name):
 @app.route('/categories/items/new', methods=['GET', 'POST'])
 @app.route('/categories/<string:category_name>/items/new', methods=['GET', 'POST'])
 def create_item(category_name=None):
+    if not isUserLoggedIn():
+        return redirect(url_for('showLogin'))
     # print category_name
     if category_name:
         category = session.query(Categories).filter_by(name=category_name).one()
         all_categories = None
     else:
         category= None
-        all_categories = session.query(Categories).filter_by(created_by=login_session['myapp_userid']).all()
+        all_categories = session.query(Categories).filter_by(created_by=APPUSER_ID).all()
     if request.method == 'GET':
         return render_template('new_item.html',
                                category=category,
@@ -290,6 +310,8 @@ def create_item(category_name=None):
 
 @app.route('/categories/<string:category_name>/items/<string:item_name>/edit', methods=['GET', 'POST'])
 def edit_item(category_name, item_name):
+    if not isUserLoggedIn():
+        return redirect(url_for('showLogin'))
     category = session.query(Categories).filter_by(name=category_name).one()
     item = session.query(Items).filter_by(name=item_name).one()
     if request.method == 'GET':
