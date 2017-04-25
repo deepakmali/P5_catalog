@@ -8,6 +8,11 @@ body {
     background-size:16px 16px;
 }
 
+a {
+	text-decoration: none;
+	color: black;
+}
+
 
 .container {
     background-color: #D4D4D4;
