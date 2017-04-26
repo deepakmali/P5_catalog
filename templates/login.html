@@ -1,12 +1,8 @@
-<!DOCTYPE html>
-<html>
-<head>
-	<title>Login</title>
-	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js" ></script>
-	<script src="//apis.google.com/js/platform.js?onload=start"></script>
-</head>
-<body>
-{% with messages = get_flashed_messages() %}
+{% extends "base_format.html" %}
+{% block content %}
+<div class="row text-center">
+  <div>
+    {% with messages = get_flashed_messages() %}
 {% if messages %}
 <ul>
   {% for message in messages %}
@@ -15,20 +11,40 @@
 </ul>
 {% endif %}
 {% endwith %}
-
-
-<div id="signInButton">
-	<span class="g-signin"
-		data-scope="openid email"
-		data-clientid="874844999995-gqrtvdunmbaubbkp9uu8clpd5ub5bf3f.apps.googleusercontent.com"
-		data-redirecturi="postmessage"
-		data-accesstype="offline"
-		data-cookiepolicy="single_host_origin"
-		data-callback="signInCallback"
-		data-approvalprompt="force">
-	</span>
+  </div>
 </div>
-<div id="result_data"></div>
+
+<div class="row"> 
+<div class="col-md-12">
+  <div id="signInButton">
+  <span class="g-signin"
+    data-scope="openid email"
+    data-clientid="874844999995-gqrtvdunmbaubbkp9uu8clpd5ub5bf3f.apps.googleusercontent.com"
+    data-redirecturi="postmessage"
+    data-accesstype="offline"
+    data-cookiepolicy="single_host_origin"
+    data-callback="signInCallback"
+    data-approvalprompt="force">
+  </span>
+  </div>
+</div>
+</div>
+<div class="row"> 
+<div class="col-md-12">
+  <div id="result_data"></div>
+</div>
+</div>
+
+<div class="row"> 
+<div class="col-md-12">
+  <button id="fb_login">
+    <fb:login-button scope="public_profile,email" onlogin="sendTokenToServer();">
+Login with Facebook
+    </fb:login-button>
+  </button>
+</div>
+</div>
+
 <script>
 // This will be called once the signin is successful
 function signInCallback(authResult){
@@ -121,16 +137,5 @@ function signInCallback(authResult){
 </script>
 
 
-<button id="fb_login">
-         
-
-          <fb:login-button scope="public_profile,email" onlogin="sendTokenToServer();">
-Login with Facebook
-
-</fb:login-button>
-
-
-        </button>
 <!--END FACEBOOK SIGN IN -->
-</body>
-</html>
+{% endblock %}
