@@ -18,7 +18,7 @@ import requests
 # Getting details from google client_secrets.json file
 CLIENT_ID = json.loads(open('client_secrets.json', 'r').read())['web']['client_id']
 APPUSER_ID = None
-
+# 
 # Database connection and session creation goes here
 engine = create_engine('postgresql://appsys:appsys@localhost:5432/catalog')
 Base.metadata.bind = engine
@@ -44,11 +44,15 @@ def get_userid(login_session):
     user = session.query(Users).filter_by(email=login_session['email']).first()
     if not user:
         user = create_user(login_session)
+    print 'user'
+    print user.id
     return user.id
 
 
 # check if user is logged in and route to login page if not logged in 
 def isUserLoggedIn():
+    # global APPUSER_ID
+    print 'test'
     print APPUSER_ID
     if APPUSER_ID:
         user = session.query(Users).filter_by(id=APPUSER_ID).first()
@@ -85,19 +89,19 @@ def gconnect():
 
     # Checking if the access token is valide with google server.
     access_token = credentials.access_token
-    print access_token
+    # print access_token
     url = ('https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=%s' % access_token)
     h = httplib2.Http()
     result = json.loads(h.request(url, 'GET')[1])
-    print result.get('error')
+    # print result.get('error')
     if result.get('error') is not None:
         response = make_response(json.dumps(result.get('error')), 500)
         response.headers['Content-Type'] = 'application/json'
         return response
     # checking if google plus ids match
     gplus_id = credentials.id_token['sub']
-    print gplus_id
-    print result
+    # print gplus_id
+    # print result
     if result['user_id'] != gplus_id:
         response = make_response(json.dumps("Token's userid does not mathc user's userid"), 401)
         response.headers['Content-Type'] = 'application/json'
@@ -129,7 +133,10 @@ def gconnect():
     login_session['picture'] = data["picture"]
     login_session['email'] = data["email"]
     # print login_session['name']
+    global APPUSER_ID
     APPUSER_ID = get_userid(login_session)
+    print 'in gonnect'
+    print APPUSER_ID
     return login_session['name']
 
 # Logging out users
@@ -152,6 +159,7 @@ def gdisconnect():
         del login_session['email']
         del login_session['picture']
         del login_session['gplus_id']
+        global APPUSER_ID
         APPUSER_ID = None
 
         response = make_response(json.dumps('Successfully disconnected'), 200)
@@ -189,7 +197,7 @@ def fbconnect():
     result = h.request(url, 'GET')[1]
     # store the results
     data = json.loads(result)
-    print data
+    # print data
     login_session['provider'] = 'facebook'
     # print data
     login_session['email'] = data['email']
@@ -207,6 +215,7 @@ def fbconnect():
     data = json.loads(result)
 
     login_session['picture'] = data["data"]["url"]
+    global APPUSER_ID
     APPUSER_ID = get_userid(login_session)
     return login_session['username']
 
@@ -219,6 +228,8 @@ def fbdisconnect():
     url = 'https://graph.facebook.com/%s/permissions?access_token=%s' % (facebook_id,access_token)
     h = httplib2.Http()
     result = h.request(url, 'DELETE')[1]
+    global APPUSER_ID
+    APPUSER_ID = None
     return "you have been logged out"
 
 
@@ -274,9 +285,12 @@ def category_items(category_name):
         return redirect(url_for('showLogin'))
     category = session.query(Categories).filter_by(name=category_name).one()
     items = session.query(Items).filter_by(category_id=category.id).all()
+    user = session.query(Users).filter_by(id=APPUSER_ID).one()
+    edit_allowed = (user == category.created_by)
     return render_template('category_items.html',
                            category=category,
                            items=items,
+                           edit_allowed=edit_allowed
                            )
 
 
