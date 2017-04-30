@@ -29,6 +29,13 @@ class Categories(Base):
     users = relationship(Users)
     created_on = Column(DateTime, default=datetime.datetime.now)
 
+    @property
+    def serialize(self):
+        return {
+        'name' : self.name,
+        'created_by' : self.created_by,
+        }
+
 
 class Items(Base):
     """
@@ -45,6 +52,13 @@ class Items(Base):
     item_pic = Column(String(250), default='/static/item_default.png')
     categories = relationship(Categories)
     users = relationship(Users)
+
+    @property
+    def serialize(self):
+        return {
+        'name' : self.name,
+        'description' : self.description,
+        }
 
 
 engine = create_engine('postgresql://appsys:appsys@localhost:5432/catalog')

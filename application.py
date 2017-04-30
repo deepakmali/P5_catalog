@@ -1,5 +1,5 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
-from sqlalchemy import create_engine
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from sqlalchemy import create_engine, and_
 from sqlalchemy.orm import sessionmaker
 from database_setup import Base, Categories, Items, Users
 from flask import session as login_session
@@ -352,6 +352,28 @@ def edit_item(category_name, item_name):
         session.add(item)
         session.commit()
         return redirect(url_for('category_items', category_name=category_name))
+
+
+# to return the json oject of all the categories
+@app.route('/categories/all_categories/JSON')
+def all_categories_json():
+    categories = session.query(Categories).all()
+    return jsonify(Categories=[i.serialize for i in categories])
+
+
+# to return all the items of a category
+@app.route('/categories/<string:category_name>/items/JSON')
+def all_items_json(category_name):
+    category = session.query(Categories).filter_by(name=category_name).one()
+    items = session.query(Items).filter_by(category_id=category.id).all()
+    return jsonify(Items=[i.serialize for i in items])
+
+
+@app.route('/categories/<string:category_name>/items/<string:item_name>/JSON')
+def item_json(category_name, item_name):
+    category = session.query(Categories).filter_by(name=category_name).one()
+    item = session.query(Items).filter_by(name=item_name, category_id=category.id).one()
+    return jsonify(item.serialize)
 
 
 if __name__ == '__main__':
