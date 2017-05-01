@@ -333,6 +333,9 @@ def edit_category(category_name):
     #     return redirect(url_for('showLogin'))
     category = session.query(Categories).filter_by(name=category_name).one()
     if request.method == 'GET':
+        if category.created_by != APPUSER_ID:
+            flash('You are not authorised to edit this.')
+            return redirect(url_for('home'))
         return render_template('new_category.html', category=category)
     else:
         new_name = request.form['new_category']
@@ -342,8 +345,7 @@ def edit_category(category_name):
                                     category_name=category_name))
         if category.name == new_name:
             flash('No changes made to the category name.')
-            return redirect(url_for('edit_category',
-                                    category_name=category_name))
+            return redirect(url_for('home'))
         isExists = session.query(Categories).filter_by(name=category_name)
         if isExists:
             flash('This category name already exists.')
@@ -360,6 +362,9 @@ def edit_category(category_name):
 @app.route('/categories/<string:category_name>/delete')
 @login_required
 def category_delete(category_name):
+    if category.created_by != APPUSER_ID:
+        flash('You are not authorised to edit this.')
+        return redirect(url_for('home'))
     category_id = session.query(Categories).filter_by(
         name=category_name).first().id
     category = session.query(Categories).filter_by(name=category_name)
@@ -466,6 +471,9 @@ def edit_item(category_name, item_name):
     category = session.query(Categories).filter_by(name=category_name).one()
     item = session.query(Items).filter_by(name=item_name,
                                           category_id=category.id).one()
+    if category.created_by != APPUSER_ID:
+        flash('You are not authorised to edit this.')
+        return redirect(url_for('home'))
     if request.method == 'GET':
         return render_template('new_item.html',
                                category=category,
@@ -514,6 +522,9 @@ def item_delete(category_name, item_name):
     category = session.query(Categories).filter_by(name=category_name).first()
     item = session.query(Items).filter_by(name=item_name,
                                           category_id=category.id)
+    if category.created_by != APPUSER_ID:
+        flash('You are not authorised to edit this.')
+        return redirect(url_for('home'))
     if not (category and item):
         flash('Category or Item not found')
         return redirect(url_for('category_items',
