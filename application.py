@@ -44,16 +44,16 @@ def get_userid(login_session):
     user = session.query(Users).filter_by(email=login_session['email']).first()
     if not user:
         user = create_user(login_session)
-    print 'user'
-    print user.id
+    # print 'user'
+    # print user.id
     return user.id
 
 
 # check if user is logged in and route to login page if not logged in 
 def isUserLoggedIn():
     # global APPUSER_ID
-    print 'test'
-    print APPUSER_ID
+    # print 'test'
+    # print APPUSER_ID
     if APPUSER_ID:
         user = session.query(Users).filter_by(id=APPUSER_ID).first()
         if user:
@@ -135,8 +135,8 @@ def gconnect():
     # print login_session['name']
     global APPUSER_ID
     APPUSER_ID = get_userid(login_session)
-    print 'in gonnect'
-    print APPUSER_ID
+    # print 'in gonnect'
+    # print APPUSER_ID
     return login_session['name']
 
 # Logging out users
@@ -255,6 +255,13 @@ def create_category():
         return render_template("new_category.html", category=None)
     else:
         category = request.form['new_category']
+        if not category:
+            flash('Category name can not be empty')
+            return redirect(url_for('create_category'))
+        isExists = session.query(Categories).filter_by(name=category)
+        if isExists:
+            flash('This category name already exists.')
+            return redirect(url_for('create_category'))
         new_category = Categories(name=category,
                                   created_by=APPUSER_ID)
         session.add(new_category)
@@ -272,6 +279,15 @@ def edit_category(category_name):
         return render_template('new_category.html', category=category)
     else:
         new_name = request.form['new_category']
+        if not new_name:
+            flash('Category name can not be empty.')
+            return redirect(url_for('edit_category',
+                                    category_name=category_name))
+        isExists = session.query(Categories).filter_by(name=category_name)
+        if isExists:
+            flash('This category name already exists.')
+            return redirect(url_for('edit_category',
+                                    category_name=category_name))
         category.name = new_name
         session.add(category)
         session.commit()
@@ -280,6 +296,7 @@ def edit_category(category_name):
 
 @app.route('/categories/<string:category_name>/items')
 def category_items(category_name):
+    print APPUSER_ID
     if not isUserLoggedIn():
         flash('Please login to continue....')
         return redirect(url_for('showLogin'))
@@ -315,16 +332,32 @@ def create_item(category_name=None):
                                )
     else:
         # created by is not required for items
-        item_name = request.form['new_item_name']
+        new_item_name = request.form['new_item_name']
         item_desc = request.form['new_item_desc']
         # print category.name
         selected_id = int(request.form['selected_category'])
+        if not (new_item_name and item_desc):
+            flash('Item name and Description should not be empty.')
+            return redirect(url_for('create_item',
+                                    category_name=category_name))
+        if not selected_id:
+            flash('Category has to be selected')
+            return redirect(url_for('create_item',
+                                    category_name=category_name))
+        print new_item_name
+        isExists = session.query(Items).filter_by(name=new_item_name,
+                                                  category_id=category.id).first()
+        print isExists
+        if isExists:
+            flash('This item already exists in this category.')
+            return redirect(url_for('create_item',
+                                    category_name=category_name))
         # print selected_id
         if not category:
             category = session.query(Categories).filter_by(id=selected_id).one()
         elif category.id != selected_id:
             category = session.query(Categories).filter_by(id=selected_id).one()
-        new_item = Items(name=item_name,
+        new_item = Items(name=new_item_name,
                          description=item_desc,
                          category_id=category.id)
         session.add(new_item)
@@ -338,16 +371,42 @@ def edit_item(category_name, item_name):
         flash('Please login to continue....')
         return redirect(url_for('showLogin'))
     category = session.query(Categories).filter_by(name=category_name).one()
-    item = session.query(Items).filter_by(name=item_name).one()
+    item = session.query(Items).filter_by(name=item_name,
+                                          category_id=category.id).one()
     if request.method == 'GET':
         return render_template('new_item.html',
                                category=category,
                                item=item
                                )
     else:
-        item_name = request.form['new_item_name']
+        new_item_name = request.form['new_item_name']
         item_desc = request.form['new_item_desc']
-        item.name = item_name
+        print 'item name'
+        print new_item_name
+        if not (new_item_name and item_desc):
+            flash('Item name and Description should not be empty.')
+            return redirect(url_for('edit_item',
+                                    category_name=category_name,
+                                    item_name=item_name))
+        if item.name == new_item_name and item.description == item_desc:
+            flash('No changes made to the Item')
+            return redirect(url_for('category_items',
+                                    category_name=category_name))
+
+        if item.name == new_item_name and item.description != item_desc:
+            item.description = item_desc
+            session.add(item)
+            session.commit()
+            return redirect(url_for('category_items', category_name=category_name))
+            
+        isExists = session.query(Items).filter_by(name=new_item_name,
+                                                  category_id=category.id).first()
+        if isExists:
+            flash('This item is already present in this category.')
+            return redirect(url_for('edit_item',
+                                    category_name=category_name,
+                                    item_name=item_name))
+        item.name = new_item_name
         item.description = item_desc
         session.add(item)
         session.commit()
