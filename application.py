@@ -18,6 +18,7 @@ import requests
 # Getting details from google client_secrets.json file
 CLIENT_ID = json.loads(open('client_secrets.json', 'r').read())['web']['client_id']
 APPUSER_ID = None
+
 # 
 # Database connection and session creation goes here
 engine = create_engine('postgresql://appsys:appsys@localhost:5432/catalog')
@@ -135,6 +136,7 @@ def gconnect():
     # print login_session['name']
     global APPUSER_ID
     APPUSER_ID = get_userid(login_session)
+    login_session['logged'] = True
     # print 'in gonnect'
     # print APPUSER_ID
     return login_session['name']
@@ -161,14 +163,16 @@ def gdisconnect():
         del login_session['gplus_id']
         global APPUSER_ID
         APPUSER_ID = None
+        login_session['logged'] = False
 
         response = make_response(json.dumps('Successfully disconnected'), 200)
         response.headers['Content-Type'] = 'application/json'
-        return response
+        flash('Successfully Logged out')
+        return redirect(url_for('home'))
     else:
         response = make_response(json.dumps('Failed to revoke the user token'), 401)
         response.headers['Content-Type'] = 'application/json'
-        return response
+        return redirect(url_for('home'))
 
 
 # connecting with facebook. This will be called in the ajax call from login page
@@ -217,6 +221,7 @@ def fbconnect():
     login_session['picture'] = data["data"]["url"]
     global APPUSER_ID
     APPUSER_ID = get_userid(login_session)
+    login_session['logged'] = True
     return login_session['username']
 
 
@@ -230,8 +235,17 @@ def fbdisconnect():
     result = h.request(url, 'DELETE')[1]
     global APPUSER_ID
     APPUSER_ID = None
-    return "you have been logged out"
+    login_session['logged'] = False
+    flash('Successfully Logged out')
+    return redirect(url_for('home'))
 
+
+@app.route('/logout')
+def logout():
+    if login_session['provider'] == 'facebook':
+        return redirect(url_for('fbdisconnect'))
+    else:
+        return redirect(url_for('gdisconnect'))
 
 # Application operation functions start here
 @app.route('/')

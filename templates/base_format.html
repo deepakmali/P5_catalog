@@ -16,7 +16,11 @@
             <h2><a href="{{url_for('home')}}">Catalog App</a></h2>
         </div>
         <div class="col-md-6 text-center">
+            {% if not session['logged'] %} 
             <h2><a href="{{url_for('showLogin')}}">Login</a></h2>
+            {% else %}
+            <h2><a href="{{ url_for('logout') }}">Logout</a></h2>
+            {% endif %}
         </div>
     </header>
     <div class="row text-center">
