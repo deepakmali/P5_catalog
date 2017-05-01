@@ -258,7 +258,7 @@ def create_category():
         if not category:
             flash('Category name can not be empty')
             return redirect(url_for('create_category'))
-        isExists = session.query(Categories).filter_by(name=category)
+        isExists = session.query(Categories).filter_by(name=category).first()
         if isExists:
             flash('This category name already exists.')
             return redirect(url_for('create_category'))
@@ -266,6 +266,7 @@ def create_category():
                                   created_by=APPUSER_ID)
         session.add(new_category)
         session.commit()
+        flash('Category created successfully!!')
         return redirect(url_for('home'))
 
 
@@ -283,6 +284,10 @@ def edit_category(category_name):
             flash('Category name can not be empty.')
             return redirect(url_for('edit_category',
                                     category_name=category_name))
+        if category.name == new_name:
+            flash('No changes made to the category name.')
+            return redirect(url_for('edit_category',
+                                    category_name=category_name))
         isExists = session.query(Categories).filter_by(name=category_name)
         if isExists:
             flash('This category name already exists.')
@@ -291,6 +296,7 @@ def edit_category(category_name):
         category.name = new_name
         session.add(category)
         session.commit()
+        flash('Category name updated.')
         return redirect(url_for('home'))
 
 
@@ -362,6 +368,7 @@ def create_item(category_name=None):
                          category_id=category.id)
         session.add(new_item)
         session.commit()
+        flash('Item added!!')
         return redirect(url_for('home'))
 
 
@@ -398,7 +405,7 @@ def edit_item(category_name, item_name):
             session.add(item)
             session.commit()
             return redirect(url_for('category_items', category_name=category_name))
-            
+
         isExists = session.query(Items).filter_by(name=new_item_name,
                                                   category_id=category.id).first()
         if isExists:
@@ -410,6 +417,7 @@ def edit_item(category_name, item_name):
         item.description = item_desc
         session.add(item)
         session.commit()
+        flash('Item updated.')
         return redirect(url_for('category_items', category_name=category_name))
 
 

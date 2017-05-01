@@ -21,3 +21,8 @@ a {
 .container {
     background-color: #D4D4D4;
 }
+
+.notice {
+    background-color: #f4b942;
+    /*color: red;*/
+}
