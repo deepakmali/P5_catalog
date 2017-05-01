@@ -33,7 +33,10 @@ This is the fifth project in the curriculam.
 * run the ```application.py``` file passing it as an argument to ```python```.
 * Open http://localhost:8080/
 
-
+# Getting json objects of the data.
+* To get all the categories is json format go to url http://localhost:8080/categories/all_categories/JSON
+* To get all the items of a category go to http://localhost:8080/categories/<string:category_name>/items/JSON
+* To get a single item http://localhost:8080/categories/<string:category_name>/items/<string:item_name>/JSON
 
 
 #Credits.
