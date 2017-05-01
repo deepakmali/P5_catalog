@@ -4,7 +4,8 @@ from sqlalchemy import create_engine, and_
 from sqlalchemy.orm import sessionmaker
 from database_setup import Base, Categories, Items, Users
 from flask import session as login_session
-
+import random
+import string
 # imports for the login integration with oauth
 # flow_from_client_secrets creates a flow object with clientsecrets.json file
 from oauth2client.client import flow_from_clientsecrets
@@ -70,7 +71,8 @@ def isUserLoggedIn():
 # Sign in functions start here
 @app.route('/login')
 def showLogin():
-    state = 'SDFLKJFlk32laskdvLK'
+    state = ''.join(random.choice(string.ascii_uppercase + string.digits)
+                    for x in xrange(32))
     login_session['state'] = state
     return render_template('login.html', STATE=state)
 
