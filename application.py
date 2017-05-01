@@ -6,6 +6,8 @@ from database_setup import Base, Categories, Items, Users
 from flask import session as login_session
 import random
 import string
+# Below one is added to improve the checking of whether user is logged in
+from functools import wraps
 # imports for the login integration with oauth
 # flow_from_client_secrets creates a flow object with clientsecrets.json file
 from oauth2client.client import flow_from_clientsecrets
@@ -31,6 +33,19 @@ DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
 app = Flask('__name__')
+
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if APPUSER_ID:
+            user = session.query(Users).filter_by(id=APPUSER_ID).first()
+            if user:
+                return f(*args, **kwargs)
+        else:
+            flash("Please login to continue")
+            return redirect(url_for('showLogin'))
+    return decorated_function
 
 
 # creating user and returning the id, if already exists, just return userid
@@ -286,10 +301,11 @@ def home():
 
 
 @app.route('/categories/new', methods=['GET', 'POST'])
+@login_required
 def create_category():
-    if not isUserLoggedIn():
-        flash('Please login to continue....')
-        return redirect(url_for('showLogin'))
+    # if not isUserLoggedIn():
+    #     flash('Please login to continue....')
+    #     return redirect(url_for('showLogin'))
     if request.method == 'GET':
         return render_template("new_category.html", category=None)
     else:
@@ -310,10 +326,11 @@ def create_category():
 
 
 @app.route('/categories/<string:category_name>/edit', methods=['GET', 'POST'])
+@login_required
 def edit_category(category_name):
-    if not isUserLoggedIn():
-        flash('Please login to continue....')
-        return redirect(url_for('showLogin'))
+    # if not isUserLoggedIn():
+    #     flash('Please login to continue....')
+    #     return redirect(url_for('showLogin'))
     category = session.query(Categories).filter_by(name=category_name).one()
     if request.method == 'GET':
         return render_template('new_category.html', category=category)
@@ -341,6 +358,7 @@ def edit_category(category_name):
 
 # To delete the category
 @app.route('/categories/<string:category_name>/delete')
+@login_required
 def category_delete(category_name):
     category_id = session.query(Categories).filter_by(
         name=category_name).first().id
@@ -357,12 +375,13 @@ def category_delete(category_name):
 
 
 @app.route('/categories/<string:category_name>/items')
+@login_required
 def category_items(category_name):
-    print 'APPUSER_ID'
-    print APPUSER_ID
-    if not isUserLoggedIn():
-        flash('Please login to continue....')
-        return redirect(url_for('showLogin'))
+    # print 'APPUSER_ID'
+    # print APPUSER_ID
+    # if not isUserLoggedIn():
+    #     flash('Please login to continue....')
+    #     return redirect(url_for('showLogin'))
     category = session.query(Categories).filter_by(name=category_name).one()
     items = session.query(Items).filter_by(category_id=category.id).all()
     user = session.query(Users).filter_by(id=APPUSER_ID).one()
@@ -377,10 +396,11 @@ def category_items(category_name):
 @app.route('/categories/items/new', methods=['GET', 'POST'])
 @app.route('/categories/<string:category_name>/items/new',
            methods=['GET', 'POST'])
+@login_required
 def create_item(category_name=None):
-    if not isUserLoggedIn():
-        flash('Please login to continue....')
-        return redirect(url_for('showLogin'))
+    # if not isUserLoggedIn():
+    #     flash('Please login to continue....')
+    #     return redirect(url_for('showLogin'))
     # print category_name
     if category_name:
         category = session.query(Categories).filter_by(
@@ -438,10 +458,11 @@ def create_item(category_name=None):
 
 @app.route('/categories/<string:category_name>/items/<string:item_name>/edit',
            methods=['GET', 'POST'])
+@login_required
 def edit_item(category_name, item_name):
-    if not isUserLoggedIn():
-        flash('Please login to continue....')
-        return redirect(url_for('showLogin'))
+    # if not isUserLoggedIn():
+    #     flash('Please login to continue....')
+    #     return redirect(url_for('showLogin'))
     category = session.query(Categories).filter_by(name=category_name).one()
     item = session.query(Items).filter_by(name=item_name,
                                           category_id=category.id).one()
@@ -506,6 +527,7 @@ def item_delete(category_name, item_name):
 
 # to return the json oject of all the categories
 @app.route('/categories/all_categories/JSON')
+@login_required
 def all_categories_json():
     categories = session.query(Categories).all()
     return jsonify(Categories=[i.serialize for i in categories])
@@ -513,6 +535,7 @@ def all_categories_json():
 
 # to return all the items of a category
 @app.route('/categories/<string:category_name>/items/JSON')
+@login_required
 def all_items_json(category_name):
     category = session.query(Categories).filter_by(name=category_name).one()
     items = session.query(Items).filter_by(category_id=category.id).all()
@@ -520,6 +543,7 @@ def all_items_json(category_name):
 
 
 @app.route('/categories/<string:category_name>/items/<string:item_name>/JSON')
+@login_required
 def item_json(category_name, item_name):
     category = session.query(Categories).filter_by(name=category_name).one()
     item = session.query(Items).filter_by(
