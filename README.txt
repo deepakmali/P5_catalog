@@ -30,7 +30,7 @@ This is the fifth project in the curriculam.
 
 # How to run the project?
 * Navigate to the ```P5_catalog``` directory.(Downloaded)
-* run the ```application.py``` file passing it as an argument to ```python```.
+* run the ```application.py``` using ```python application.py``` command.
 * Open http://localhost:8080/
 
 # Getting json objects of the data.
