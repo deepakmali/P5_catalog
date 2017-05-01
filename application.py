@@ -401,16 +401,18 @@ def create_item(category_name=None):
         new_item_name = request.form['new_item_name']
         item_desc = request.form['new_item_desc']
         # print category.name
-        selected_id = int(request.form['selected_category'])
+        selected_id = request.form['selected_category']
         if not (new_item_name and item_desc):
             flash('Item name and Description should not be empty.')
             return redirect(url_for('create_item',
                                     category_name=category_name))
-        if not selected_id:
+        if not selected_id.isdigit():
             flash('Category has to be selected')
             return redirect(url_for('create_item',
                                     category_name=category_name))
-        print new_item_name
+        
+        if not category:
+            category = session.query(Categories).filter_by(id=int(selected_id)).first()  # NOQA
         isExists = session.query(Items).filter_by(name=new_item_name,
                                                   category_id=category.id).first()  # NOQA
         print isExists

@@ -19,7 +19,7 @@
             </div>
             {% if not category %}
             <select class="custom-select" name="selected_category">
-                <option selected>Open this select menu</option>
+                <option selected value="defalut">Open this select menu</option>
                 {% for option in all_categories %}
                 <option value="{{ option.id }}">{{ option.name }}</option>
                 {% endfor %}
