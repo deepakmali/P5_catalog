@@ -1,7 +1,7 @@
 {% extends "base_format.html" %}
 {% block content %}
 <div class="row">
-    <div class="col-md-12 text-center"><h2>{{ category.name }} <a href="{{ url_for('edit_category', category_name=category.name) }}">Edit</a></h2></div>
+    <div class="col-md-12 text-center"><h2>{{ category.name }} <a href="{{ url_for('edit_category', category_name=category.name) }}">Edit</a>|<a href="{{ url_for('category_delete', category_name=category.name)}}">Delete</a></h2></div>
 </div>
 <div class="row text-left">
     <div class="col-md-12"><a href="{{ url_for('create_item', category_name=category.name) }}">Create New Item</a></div>

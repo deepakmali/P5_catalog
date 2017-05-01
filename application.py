@@ -300,8 +300,25 @@ def edit_category(category_name):
         return redirect(url_for('home'))
 
 
+# To delete the category
+@app.route('/categories/<string:category_name>/delete')
+def category_delete(category_name):
+    category_id = session.query(Categories).filter_by(name=category_name).first().id
+    category = session.query(Categories).filter_by(name=category_name)
+    if not category:
+        flash('Category not found.')
+        return redirect(url_for('home'))
+    items = session.query(Items).filter_by(category_id=category_id)
+    items.delete()
+    category.delete()
+    session.commit()
+    flash('Category deleted successfully.')
+    return redirect(url_for('home'))
+
+
 @app.route('/categories/<string:category_name>/items')
 def category_items(category_name):
+    print 'APPUSER_ID'
     print APPUSER_ID
     if not isUserLoggedIn():
         flash('Please login to continue....')
