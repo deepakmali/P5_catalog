@@ -421,6 +421,23 @@ def edit_item(category_name, item_name):
         return redirect(url_for('category_items', category_name=category_name))
 
 
+# delete an item
+@app.route('/categories/<string:category_name>/items/<string:item_name>/delete', methods=['GET', 'POST'])
+def item_delete(category_name, item_name):
+    category = session.query(Categories).filter_by(name=category_name).first()
+    item = session.query(Items).filter_by(name=item_name,
+                                          category_id=category.id)
+    if not (category and item):
+        flash('Category or Item not found')
+        return redirect(url_for('category_items',
+                                category_name=category_name))
+    item.delete()
+    session.commit()
+    flash('Item was deleted.')
+    return redirect(url_for('category_items',
+                            category_name=category_name))
+
+
 # to return the json oject of all the categories
 @app.route('/categories/all_categories/JSON')
 def all_categories_json():
