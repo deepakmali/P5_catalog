@@ -1,4 +1,5 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from flask import Flask, render_template, request
+from flask import redirect, url_for, flash, jsonify
 from sqlalchemy import create_engine, and_
 from sqlalchemy.orm import sessionmaker
 from database_setup import Base, Categories, Items, Users
@@ -7,7 +8,8 @@ from flask import session as login_session
 # imports for the login integration with oauth
 # flow_from_client_secrets creates a flow object with clientsecrets.json file
 from oauth2client.client import flow_from_clientsecrets
-# If there is an error while exchanging authorisation code for access token FlowExchangeError can be used to catch it.
+# If there is an error while exchanging authorisation code for access
+# token FlowExchangeError can be used to catch it.
 from oauth2client.client import FlowExchangeError
 import httplib2
 import json
@@ -16,10 +18,11 @@ from flask import make_response
 import requests
 
 # Getting details from google client_secrets.json file
-CLIENT_ID = json.loads(open('client_secrets.json', 'r').read())['web']['client_id']
+CLIENT_ID = json.loads(open('client_secrets.json', 'r').read())[
+    'web']['client_id']
 APPUSER_ID = None
 
-# 
+#
 # Database connection and session creation goes here
 engine = create_engine('postgresql://appsys:appsys@localhost:5432/catalog')
 Base.metadata.bind = engine
@@ -40,7 +43,9 @@ def create_user(login_session):
     user = session.query(Users).filter_by(email=login_session['email']).one()
     return user
 
-# get userid 
+# get userid
+
+
 def get_userid(login_session):
     user = session.query(Users).filter_by(email=login_session['email']).first()
     if not user:
@@ -50,7 +55,7 @@ def get_userid(login_session):
     return user.id
 
 
-# check if user is logged in and route to login page if not logged in 
+# check if user is logged in and route to login page if not logged in
 def isUserLoggedIn():
     # global APPUSER_ID
     # print 'test'
@@ -60,7 +65,6 @@ def isUserLoggedIn():
         if user:
             return True
     return False
-
 
 
 # Sign in functions start here
@@ -82,16 +86,20 @@ def gconnect():
         # getting credential object by providing authorization code
         oauth_flow = flow_from_clientsecrets('client_secrets.json', scope='')
         oauth_flow.redirect_uri = 'postmessage'
-        credentials = oauth_flow.step2_exchange(code) # This function exchages authorisation code for credential object.
+        # This function exchages authorisation code for credential object.
+        credentials = oauth_flow.step2_exchange(code)
     except FlowExchangeError:
-        response = make_response(json.dumps('Failed to upgrade the authorisation code.'), 401)
+        response = make_response(
+            json.dumps('Failed to upgrade the authorisation code.'), 401)
         response.headers['Content-Type'] = 'application/json'
         return response
 
     # Checking if the access token is valide with google server.
     access_token = credentials.access_token
     # print access_token
-    url = ('https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=%s' % access_token)
+    url = (
+        'https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=%s' %
+        access_token)
     h = httplib2.Http()
     result = json.loads(h.request(url, 'GET')[1])
     # print result.get('error')
@@ -104,20 +112,23 @@ def gconnect():
     # print gplus_id
     # print result
     if result['user_id'] != gplus_id:
-        response = make_response(json.dumps("Token's userid does not mathc user's userid"), 401)
+        response = make_response(
+            json.dumps("Token's userid does not mathc user's userid"), 401)
         response.headers['Content-Type'] = 'application/json'
         return response
 
     # checking if client_id match
     if result['issued_to'] != CLIENT_ID:
-        response = make_response(json.dumps("Token's client Id does not match with apps"), 401)
+        response = make_response(
+            json.dumps("Token's client Id does not match with apps"), 401)
         response.headers['Content-Type'] = 'application/json'
         return response
-    # Checking if user is already logged in 
+    # Checking if user is already logged in
     stored_credentials = login_session.get('credentials')
     stored_gplus_id = login_session.get('gplus_id')
     if stored_credentials is not None and gplus_id == stored_gplus_id:
-        response = make_response(json.dumps("Current user is already connected"), 200)
+        response = make_response(
+            json.dumps("Current user is already connected"), 200)
         response.headers['Content-Type'] = 'application/json'
         return response
     # storing the access token in session for later use
@@ -125,7 +136,7 @@ def gconnect():
     login_session['gplus_id'] = gplus_id
     # Get user info
     userinfo_url = 'https://www.googleapis.com/oauth2/v1/userinfo'
-    params = {'access_token':credentials.access_token, 'alt':'json'}
+    params = {'access_token': credentials.access_token, 'alt': 'json'}
     answer = requests.get(userinfo_url, params=params)
     data = json.loads(answer.text)
     # Getting users info in login session
@@ -142,12 +153,15 @@ def gconnect():
     return login_session['name']
 
 # Logging out users
+
+
 @app.route('/gdisconnect')
 def gdisconnect():
     # disconnect the connected user
     credentials = login_session['credentials']
     if credentials is None:
-        response = make_response(json.dumps('Current user is not connected'), 401)
+        response = make_response(
+            json.dumps('Current user is not connected'), 401)
         response.headers['Content-Type'] = 'application/json'
         return response
     access_token = credentials.access_token
@@ -170,12 +184,14 @@ def gdisconnect():
         flash('Successfully Logged out')
         return redirect(url_for('home'))
     else:
-        response = make_response(json.dumps('Failed to revoke the user token'), 401)
+        response = make_response(
+            json.dumps('Failed to revoke the user token'), 401)
         response.headers['Content-Type'] = 'application/json'
         return redirect(url_for('home'))
 
 
-# connecting with facebook. This will be called in the ajax call from login page
+# connecting with facebook. This will be called in the ajax call from
+# login page
 @app.route('/fbconnect', methods=['POST'])
 def fbconnect():
     if request.args.get('state') != login_session['state']:
@@ -183,11 +199,15 @@ def fbconnect():
         response.headers['Content-Type'] = 'application/json'
         return response
     access_token = request.data
-    app_id = json.loads(open('fb_client_secrets.json', 'r').read())['web']['app_id']
-    app_secret = json.loads(open('fb_client_secrets.json', 'r').read())['web']['app_secret']
+    app_id = json.loads(
+        open(
+            'fb_client_secrets.json',
+            'r').read())['web']['app_id']
+    app_secret = json.loads(open('fb_client_secrets.json', 'r').read())[
+        'web']['app_secret']
     url = ('https://graph.facebook.com/oauth/access_token?'
            'grant_type=fb_exchange_token&client_id=%s&client_secret=%s'
-           '&fb_exchange_token=%s') %(app_id, app_secret, access_token)
+           '&fb_exchange_token=%s') % (app_id, app_secret, access_token)
     h = httplib2.Http()
     result = h.request(url, 'GET')[1]
 
@@ -207,13 +227,13 @@ def fbconnect():
     login_session['email'] = data['email']
     login_session['username'] = data['name']
     login_session['facebook_id'] = data['id']
-    # The token must be stored in the login_session in order to properly logout, 
+    # The token must be stored in the login_session in order to properly logout
     # let's strip out the information before the equals sign in our token
     stored_token = token.split("=")[1]
     login_session['access_token'] = stored_token
 
     # Get user picture
-    url = 'https://graph.facebook.com/v2.4/me/picture?%s&redirect=0&height=200&width=200' % token
+    url = 'https://graph.facebook.com/v2.4/me/picture?%s&redirect=0&height=200&width=200' % token  # NOQA
     h = httplib2.Http()
     result = h.request(url, 'GET')[1]
     data = json.loads(result)
@@ -230,7 +250,8 @@ def fbdisconnect():
     facebook_id = login_session['facebook_id']
     # The access token must me included to successfully logout
     access_token = login_session['access_token']
-    url = 'https://graph.facebook.com/%s/permissions?access_token=%s' % (facebook_id,access_token)
+    url = 'https://graph.facebook.com/%s/permissions?access_token=%s' % (
+        facebook_id, access_token)
     h = httplib2.Http()
     result = h.request(url, 'DELETE')[1]
     global APPUSER_ID
@@ -248,12 +269,14 @@ def logout():
         return redirect(url_for('gdisconnect'))
 
 # Application operation functions start here
+
+
 @app.route('/')
 @app.route('/categories')
 def home():
     categories = session.query(Categories).order_by(Categories.name).all()
-    # latest_items = session.query(Items).order_by(Items.created_on.desc()).limit(10)
-    latest_items = session.query(Items).join('categories').order_by(Items.created_on.desc()).limit(10)
+    latest_items = session.query(Items).join(
+        'categories').order_by(Items.created_on.desc()).limit(10)
     return render_template("home_page.html",
                            categories=categories,
                            latest_items=latest_items
@@ -317,7 +340,8 @@ def edit_category(category_name):
 # To delete the category
 @app.route('/categories/<string:category_name>/delete')
 def category_delete(category_name):
-    category_id = session.query(Categories).filter_by(name=category_name).first().id
+    category_id = session.query(Categories).filter_by(
+        name=category_name).first().id
     category = session.query(Categories).filter_by(name=category_name)
     if not category:
         flash('Category not found.')
@@ -349,18 +373,21 @@ def category_items(category_name):
 
 
 @app.route('/categories/items/new', methods=['GET', 'POST'])
-@app.route('/categories/<string:category_name>/items/new', methods=['GET', 'POST'])
+@app.route('/categories/<string:category_name>/items/new',
+           methods=['GET', 'POST'])
 def create_item(category_name=None):
     if not isUserLoggedIn():
         flash('Please login to continue....')
         return redirect(url_for('showLogin'))
     # print category_name
     if category_name:
-        category = session.query(Categories).filter_by(name=category_name).one()
+        category = session.query(Categories).filter_by(
+            name=category_name).one()
         all_categories = None
     else:
-        category= None
-        all_categories = session.query(Categories).filter_by(created_by=APPUSER_ID).all()
+        category = None
+        all_categories = session.query(Categories).filter_by(
+            created_by=APPUSER_ID).all()
     if request.method == 'GET':
         return render_template('new_item.html',
                                category=category,
@@ -383,7 +410,7 @@ def create_item(category_name=None):
                                     category_name=category_name))
         print new_item_name
         isExists = session.query(Items).filter_by(name=new_item_name,
-                                                  category_id=category.id).first()
+                                                  category_id=category.id).first()  # NOQA
         print isExists
         if isExists:
             flash('This item already exists in this category.')
@@ -391,9 +418,11 @@ def create_item(category_name=None):
                                     category_name=category_name))
         # print selected_id
         if not category:
-            category = session.query(Categories).filter_by(id=selected_id).one()
+            category = session.query(
+                Categories).filter_by(id=selected_id).one()
         elif category.id != selected_id:
-            category = session.query(Categories).filter_by(id=selected_id).one()
+            category = session.query(
+                Categories).filter_by(id=selected_id).one()
         new_item = Items(name=new_item_name,
                          description=item_desc,
                          category_id=category.id)
@@ -403,7 +432,8 @@ def create_item(category_name=None):
         return redirect(url_for('home'))
 
 
-@app.route('/categories/<string:category_name>/items/<string:item_name>/edit', methods=['GET', 'POST'])
+@app.route('/categories/<string:category_name>/items/<string:item_name>/edit',
+           methods=['GET', 'POST'])
 def edit_item(category_name, item_name):
     if not isUserLoggedIn():
         flash('Please login to continue....')
@@ -435,10 +465,11 @@ def edit_item(category_name, item_name):
             item.description = item_desc
             session.add(item)
             session.commit()
-            return redirect(url_for('category_items', category_name=category_name))
+            return redirect(
+                url_for('category_items', category_name=category_name))
 
         isExists = session.query(Items).filter_by(name=new_item_name,
-                                                  category_id=category.id).first()
+                                                  category_id=category.id).first()  # NOQA
         if isExists:
             flash('This item is already present in this category.')
             return redirect(url_for('edit_item',
@@ -453,7 +484,7 @@ def edit_item(category_name, item_name):
 
 
 # delete an item
-@app.route('/categories/<string:category_name>/items/<string:item_name>/delete', methods=['GET', 'POST'])
+@app.route('/categories/<string:category_name>/items/<string:item_name>/delete', methods=['GET', 'POST'])  # NOQA
 def item_delete(category_name, item_name):
     category = session.query(Categories).filter_by(name=category_name).first()
     item = session.query(Items).filter_by(name=item_name,
@@ -487,7 +518,8 @@ def all_items_json(category_name):
 @app.route('/categories/<string:category_name>/items/<string:item_name>/JSON')
 def item_json(category_name, item_name):
     category = session.query(Categories).filter_by(name=category_name).one()
-    item = session.query(Items).filter_by(name=item_name, category_id=category.id).one()
+    item = session.query(Items).filter_by(
+        name=item_name, category_id=category.id).one()
     return jsonify(item.serialize)
 
 

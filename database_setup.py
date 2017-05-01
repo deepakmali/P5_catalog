@@ -6,6 +6,7 @@ import datetime
 
 Base = declarative_base()
 
+
 class Users(Base):
     """
     To store the details of user logged in via Google or Facebook.
@@ -32,14 +33,14 @@ class Categories(Base):
     @property
     def serialize(self):
         return {
-        'name' : self.name,
-        'created_by' : self.created_by,
+            'name': self.name,
+            'created_by': self.created_by,
         }
 
 
 class Items(Base):
     """
-    To store details of items. To which category the item belongs and created 
+    To store details of items. To which category the item belongs and created
     by who and the time it was created.
     """
     __tablename__ = 'items'
@@ -56,8 +57,8 @@ class Items(Base):
     @property
     def serialize(self):
         return {
-        'name' : self.name,
-        'description' : self.description,
+            'name': self.name,
+            'description': self.description,
         }
 
 
