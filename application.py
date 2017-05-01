@@ -346,7 +346,7 @@ def edit_category(category_name):
         if category.name == new_name:
             flash('No changes made to the category name.')
             return redirect(url_for('home'))
-        isExists = session.query(Categories).filter_by(name=category_name)
+        isExists = session.query(Categories).filter_by(name=new_name).first()
         if isExists:
             flash('This category name already exists.')
             return redirect(url_for('edit_category',
