@@ -1,6 +1,6 @@
 from sqlalchemy import Table, Column, Integer, String, ForeignKey, DateTime
 from sqlalchemy import create_engine
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, backref
 from sqlalchemy.ext.declarative import declarative_base
 import datetime
 
@@ -28,6 +28,7 @@ class Categories(Base):
     name = Column(String(80), nullable=False)
     created_by = Column(Integer, ForeignKey('users.id'))
     users = relationship(Users)
+    # items = relationship("Items", cascade="all, delete-orphan")
     created_on = Column(DateTime, default=datetime.datetime.now)
 
     @property
@@ -51,7 +52,9 @@ class Items(Base):
     created_by = Column(Integer, ForeignKey('users.id'))
     created_on = Column(DateTime, default=datetime.datetime.now)
     item_pic = Column(String(250), default='/static/item_default.png')
-    categories = relationship(Categories)
+    categories = relationship("Categories", 
+                              backref=backref("items", cascade="all, delete-orphan"))
+    # categories = relationship("Categories")
     users = relationship(Users)
 
     @property
