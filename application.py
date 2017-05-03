@@ -51,6 +51,8 @@ def login_required(f):
 # creating user and returning the id, if already exists, just return userid
 def create_user(login_session):
     user = Users()
+    print 'inside create user'
+    print login_session['name']
     user.name = login_session['name']
     user.email = login_session['email']
     user.picture = login_session['picture']
@@ -242,7 +244,7 @@ def fbconnect():
     login_session['provider'] = 'facebook'
     # print data
     login_session['email'] = data['email']
-    login_session['username'] = data['name']
+    login_session['name'] = data['name']
     login_session['facebook_id'] = data['id']
     # The token must be stored in the login_session in order to properly logout
     # let's strip out the information before the equals sign in our token
@@ -259,7 +261,7 @@ def fbconnect():
     global APPUSER_ID
     APPUSER_ID = get_userid(login_session)
     login_session['logged'] = True
-    return login_session['username']
+    return login_session['name']
 
 
 @app.route('/fbdisconnect')
@@ -362,6 +364,7 @@ def edit_category(category_name):
 @app.route('/categories/<string:category_name>/delete')
 @login_required
 def category_delete(category_name):
+    category = session.query(Categories).filter_by(name=category_name).first()
     if category.created_by != APPUSER_ID:
         flash('You are not authorised to edit this.')
         return redirect(url_for('home'))
@@ -371,8 +374,8 @@ def category_delete(category_name):
     if not category:
         flash('Category not found.')
         return redirect(url_for('home'))
-    items = session.query(Items).filter_by(category_id=category_id)
-    items.delete()
+    # items = session.query(Items).filter_by(category_id=category_id)
+    # items.delete()
     category.delete()
     session.commit()
     flash('Category deleted successfully.')
